@@ -139,6 +139,7 @@ public class Player {
 			return false;
 		}
 		else{
+		    newCard.setReserved();
 			this.reserves.add(newCard);
 			this.golds++;
 			this.board.reduceAvailableGolds();

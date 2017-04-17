@@ -1,5 +1,9 @@
 package View;
 
+import Model.Noble;
+import Model.Player;
+import Model.utils.GemInfo;
+
 
 import java.awt.*;
 import javax.imageio.ImageIO;
@@ -75,7 +79,17 @@ public class BoardUI {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void updateByGame(Game game){
+    public void updateByGame(Game game){
+        Noble[] nobles = game.gameBoard.getNobles();
+        for (int i=0;i<NUM_PLAYER+1;i++) {
+            if(!nobles[i].getIsRecruited()){
+                Noble nobleInput = new Noble(nobles[i].getThreshold().diamond, nobles[i].getThreshold().emerald, nobles[i].getThreshold().onyx, nobles[i].getThreshold().ruby, nobles[i].getThreshold().sapphire);
+                this.nobles[i].add(new NoblePanel(nobleInput,nobleImages), BorderLayout.CENTER);
+            }
+            else {
+                this.nobles[i].removeAll();
+            }
+        }
         return;
     }
     /**
@@ -147,24 +161,28 @@ public class BoardUI {
     }
 
     //load images in dir to memory
-    public void loadImagesInMemory(){
+    public void loadImagesInMemory() {
         final File dir = new File("src/View/img");
         if (dir.isDirectory()) { // make sure it's a directory
             for (final File f : dir.listFiles()) {
                 //load images of gems
-                if(f.getName().endsWith("Gem.png")){
-                    storeInMap(gemImages,7,f,GEM_WIDTH,GEM_HEIGHT);
+                if (f.getName().endsWith("Gem.png")) {
+                    storeInMap(gemImages, 7, f, GEM_WIDTH, GEM_HEIGHT);
                 }
                 //load images of nobles
-                else if(f.getName().endsWith("Noble.jpg")){
-                    storeInMap(nobleImages,9,f,NOBLE_WIDTH,NOBLE_HEIGHT);
+                else if (f.getName().endsWith("Noble.jpg")) {
+                    storeInMap(nobleImages, 9, f, NOBLE_WIDTH, NOBLE_HEIGHT);
                 }
                 //load images of cards
-                else{
-                    storeInMap(cardImages,4,f,CARD_WIDTH,CARD_HEIGHT);
+                else {
+                    storeInMap(cardImages, 4, f, CARD_WIDTH, CARD_HEIGHT);
                 }
             }
         }
+    }
+
+    public PlayerPanel[] getPlayers(){
+        return this.players;
     }
 
     private void setLayout() {
@@ -267,7 +285,7 @@ public class BoardUI {
     private void setPlayerArea() {
 
         playerArea.setLayout(new BoxLayout(playerArea,BoxLayout.Y_AXIS));
-        PlayerPanel players[] = new PlayerPanel[NUM_PLAYER];
+        players = new PlayerPanel[NUM_PLAYER];
         for (int i=0;i<NUM_PLAYER;i++){
             players[i] = new PlayerPanel();
             players[i].setPreferredSize(new Dimension(7*ratio,9*ratio/NUM_PLAYER));
@@ -380,6 +398,10 @@ public class BoardUI {
                 bonusLabel.setPreferredSize(new Dimension(ratio*3/5,ratio*3/NUM_PLAYER));
                 cards.add(bonusLabel);
             }
+        }
+
+        public JButton[] getReservedCards(){
+            return this.reservedCards;
         }
 
     }

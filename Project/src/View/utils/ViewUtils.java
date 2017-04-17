@@ -12,11 +12,11 @@ public class ViewUtils {
 
     public final static int ratio = 70;
 
-    public final static int WINDOW_WIDTH=16*ratio;
+    public final static int WINDOW_WIDTH=20*ratio;
     public final static int WINDOW_HEIGHT=10*ratio;
     public final static int GAME_WIDTH=13*ratio;
     public final static int GAME_HEIGHT=10*ratio;
-    public final static int PLAYER_WIDTH=3*ratio;
+    public final static int PLAYER_WIDTH=7*ratio;
     public final static int PLAYER_HEIGHT=10*ratio;
 
     public final static int CARD_WIDTH = ratio*3/2;

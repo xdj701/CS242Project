@@ -11,6 +11,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
+import static Model.utils.GameUtils.*;
+import static View.BoardUI.*;
+
 /**
  * Created by boyinzhang on 4/17/17.
  */
@@ -22,7 +25,7 @@ public class Controller {
 
     public Controller(){
         this.game = new Game();
-        this.boardUI = new BoardUI();
+        this.boardUI = new BoardUI(game);
         this.currentGemInfo = new GemInfo(0);
         addMenuItemListener();
         addGemsListener();
@@ -63,9 +66,10 @@ public class Controller {
         });
     }
 
-
+    /**
+     * Add listeners of gems.
+     */
     private void addGemsListener(){
-
         this.boardUI.getGems()[4].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -102,9 +106,12 @@ public class Controller {
         });
     }
 
+    /**
+     * Add listeners to the cards on board and reserved cards
+     */
     private void addCardListeners(){
-        for(int i = 0; i < 3; i++){
-            for(int j = 0; j < 4; j ++){
+        for(int i = 0; i < NUM_CARD_RANK; i++){
+            for(int j = 0; j < NUM_CARD_PER_RANK; j ++){
                 int finalI = i;
                 int finalJ = j;
                 this.boardUI.getCards()[i][j].addActionListener(new ActionListener() {
@@ -115,8 +122,23 @@ public class Controller {
                 });
             }
         }
+        for(int i = 0; i < NUM_PLAYER; i++){
+            for(int j = 0; j < MAX_RESERVED_CARDS; j++){
+                int finalI = i;
+                int finalJ = j;
+                this.boardUI.getPlayers()[i].getReservedCards()[j].addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        selectedCard = game.getPlayers()[finalI].getReserves().get(finalJ);
+                    }
+                });
+            }
+        }
     }
 
+    /**
+     * Add listeners to the four major operations
+     */
     private void addFunctionalListeners(){
         addResetLisenter();
         addCollectListener();
@@ -124,6 +146,9 @@ public class Controller {
         addReserveListener();
     }
 
+    /**
+     * Add listener to the reset button
+     */
     private void addResetLisenter(){
         this.boardUI.getReset().addActionListener(new ActionListener() {
             @Override
@@ -133,6 +158,9 @@ public class Controller {
         });
     }
 
+    /**
+     * Add listener to the collect button
+     */
     private void addCollectListener(){
         this.boardUI.getCollect().addActionListener(new ActionListener() {
             @Override
@@ -153,6 +181,9 @@ public class Controller {
         });
     }
 
+    /**
+     * Add listener to the buy button
+     */
     private void addBuyListener(){
         this.boardUI.getBuy().addActionListener(new ActionListener() {
             @Override
@@ -162,7 +193,7 @@ public class Controller {
                             "Warning", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                boolean status = game.getCurrentPlayer().buyCard(selectedCard,false);
+                boolean status = game.getCurrentPlayer().buyCard(selectedCard,selectedCard.isReserved());
                 if(!status){
                     JOptionPane.showMessageDialog(null, "Cannot buy that card! Please make another try!",
                             "Warning", JOptionPane.WARNING_MESSAGE);
@@ -171,7 +202,7 @@ public class Controller {
                 else{
                     selectedCard = null;
                     game.getCurrentPlayer().recruitAvailableNobles();
-                    if(game.getCurrentPlayer().getId() == 4){
+                    if(game.getCurrentPlayer().getId() == NUM_PLAYER){
                         int numberOfWining = game.checkEndofGame();
                         if(numberOfWining == 1){
                             for(Player player : game.getPlayers()){
@@ -200,6 +231,9 @@ public class Controller {
         });
     }
 
+    /**
+     * Add listener to the reserve button
+     */
     private void addReserveListener(){
         this.boardUI.getReserve().addActionListener(new ActionListener() {
             @Override
