@@ -122,6 +122,7 @@ public class Controller {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         selectedCard = game.getGameBoard().getCards()[finalI][finalJ];
+                        selectedCard.setPosition(finalI,finalJ);
                     }
                 });
             }
@@ -134,6 +135,7 @@ public class Controller {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         selectedCard = game.getPlayers()[finalI].getReserves().get(finalJ);
+                        selectedCard.setPosition(finalI,finalJ);
                     }
                 });
             }
@@ -204,6 +206,8 @@ public class Controller {
                     selectedCard = null;
                 }
                 else{
+                    Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
+                    game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
                     selectedCard = null;
                     game.getCurrentPlayer().recruitAvailableNobles();
                     if(game.getCurrentPlayer().getId() == NUM_PLAYER){
@@ -254,6 +258,8 @@ public class Controller {
                     selectedCard = null;
                 }
                 else{
+                    Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
+                    game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
                     selectedCard = null;
                     game.turnToNextPlayer();
                     boardUI.updateByGame(game);

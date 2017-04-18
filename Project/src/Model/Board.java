@@ -32,6 +32,10 @@ public class Board {
         availableGolds = INIT_AMOUNT_GOLD;
     }
 
+    public void setCardOnBoard(Card card, int[] position){
+        cards[position[0]][position[1]] = card;
+    }
+
     public GemInfo getAvailableGem() { return availableGem;    }
 
     public int getAvailableGolds(){
