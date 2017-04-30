@@ -221,11 +221,14 @@ public class Controller{
                     currentGemInfo.reset();
                 }
                 else{
+                    String command = String.valueOf(currentGemInfo.diamond) + ' ' + String.valueOf(currentGemInfo.emerald) + ' '
+                            + String.valueOf(currentGemInfo.onyx) + ' ' + String.valueOf(currentGemInfo.ruby) + ' '
+                            + String.valueOf(currentGemInfo.sapphire);
                     currentGemInfo.reset();
                     //if (checkEnd()) return;
-                    game.turnToNextPlayer();
+                    //game.turnToNextPlayer();
 
-                    requestServer("COLLECT");
+                    requestServer("COLLECT", command);
 
                     //boardUI.updateByGame(game);
                 }
@@ -258,6 +261,15 @@ public class Controller{
                     selectedCard = null;
                 }
                 else{
+                    String command;
+                    if(selectedCard.isReserved()){
+                        command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
+                                + " 1";
+                    }
+                    else{
+                        command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
+                                + " 0";
+                    }
                     Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
                     game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
                     selectedCard = null;
@@ -269,7 +281,7 @@ public class Controller{
                         return;
                     }
                     game.turnToNextPlayer();
-                    requestServer("PURCHASE");
+                    requestServer("PURCHASE", command);
 
                     //boardUI.updateByGame(game);
                 }
@@ -338,13 +350,14 @@ public class Controller{
                     selectedCard = null;
                 }
                 else{
+                    String command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1]);
                     Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
                     game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
                     selectedCard = null;
                     //if (checkEnd()) return;
                     game.turnToNextPlayer();
                     //boardUI.window.setEnabled(false);
-                    requestServer("RESERVE");
+                    requestServer("RESERVE", command);
                     System.out.println("Reserve request made");
 
                     //boardUI.updateByGame(game);
@@ -374,8 +387,19 @@ public class Controller{
      */
     private void requestServer(String msg){
         try {
+            out.reset();
             out.writeObject(msg);
             out.writeObject(game);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void requestServer(String msg, String command){
+        try {
+            out.reset();
+            out.writeObject(msg);
+            out.writeObject(command);
         } catch (IOException e) {
             e.printStackTrace();
         }

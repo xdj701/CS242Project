@@ -2,6 +2,8 @@ package Network;
 
 import Controller.Controller;
 import Game.*;
+import Model.Card;
+import Model.utils.GemInfo;
 
 import javax.print.DocFlavor;
 import java.io.*;
@@ -20,6 +22,7 @@ public class Server extends Thread  {
     private ServerSocket listener;
     private ObjectInputStream[] input;
     private ObjectOutputStream[] output;
+    private Game game;
 
     public Server(int port)throws Exception {
         //open new socket and stream
@@ -52,7 +55,7 @@ public class Server extends Thread  {
 
         }
 
-        Game game = new Game(names);
+        game = new Game(names);
         System.out.println("new Game");
         gameHelper(game);
     }
@@ -138,6 +141,7 @@ public class Server extends Thread  {
     public void broadcastPlayers(Game updatedGame) throws IOException {
 
         for(int i = 0; i <  NUM_PLAYER; i++){
+            output[i].reset();
             output[i].writeObject("UPDATE");
             output[i].writeObject(updatedGame);
         }
@@ -189,9 +193,9 @@ public class Server extends Thread  {
                             if(agree == NUM_PLAYER){
                                 vote = 0;
                                 agree = 0;
-                                Game newGame = new Game();
+                                game = new Game();
                                 currentPlayer = 0;
-                                broadcastPlayers(newGame);
+                                broadcastPlayers(game);
                             }
                             else if(vote == NUM_PLAYER){
                                 vote = 0;
@@ -214,11 +218,66 @@ public class Server extends Thread  {
 
                             continue;
                         }
+                        // here is receiving the information for collection
+                        if (request.startsWith("COLLECT")){
+                            String command = (String) input[currentPlayer].readObject();
+                            String[] splited = command.split(" ");
+                            //splited is the number of each gems collected
+                            GemInfo collectedGem = new GemInfo(Integer.parseInt(splited[0]),Integer.parseInt(splited[1]), Integer.parseInt(splited[2]), Integer.parseInt(splited[3]), Integer.parseInt(splited[4]));
+                            game.getCurrentPlayer().collectGems(collectedGem);
+                            game.turnToNextPlayer();
+                            //send the updated game to all the clients
+                            broadcastPlayers(game);
+                            currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
+                        }
 
-                        //valid action
-                        if (request.startsWith("COLLECT") || request.startsWith("PURCHASE") || request.startsWith("RESERVE")) {
-                            Game updatedGame = (Game) input[currentPlayer].readObject();
-                            broadcastPlayers(updatedGame);
+                        // here is receiving the information for buying cards
+                        if (request.startsWith("PURCHASE")) {
+                            String command = (String) input[currentPlayer].readObject();
+                            String[] splited = command.split(" ");
+                            //splited is the postion of the card, and whether the card is reserved
+                            int cardX = Integer.parseInt(splited[0]);
+                            int cardY = Integer.parseInt(splited[1]);
+                            boolean isReserved;
+                            if ( Integer.parseInt(splited[2]) == 1)
+                                isReserved = true;
+                            else
+                                isReserved = false;
+                            Card selectedCard;
+                            //if it's reserved, then get the card from player section
+                            if(isReserved)
+                                selectedCard = game.getPlayers()[cardX].getReserves().get(cardY);
+                            //if not, get the card from the game board
+                            else
+                                selectedCard = game.gameBoard.getCards()[cardX][cardY];
+
+                            game.getCurrentPlayer().buyCard(selectedCard,isReserved);
+                            //if it is not reserved, we need to put a new card back.
+                            if(!isReserved) {
+                                Card newCard = game.getGameBoard().getNewCard(cardX);
+                                int[] positon = {cardX, cardY};
+                                game.getGameBoard().setCardOnBoard(newCard, positon);
+                            }
+                            game.getCurrentPlayer().recruitAvailableNobles();
+                            game.turnToNextPlayer();
+                            broadcastPlayers(game);
+                            currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
+                        }
+
+                        //here is receiving the information for reserving card
+                        if (request.startsWith("RESERVE")) {
+                            String command = (String) input[currentPlayer].readObject();
+                            String[] splited = command.split(" ");
+                            // splited is the position of the card
+                            int cardX = Integer.parseInt(splited[0]);
+                            int cardY = Integer.parseInt(splited[1]);
+                            Card selectedCard = game.gameBoard.getCards()[cardX][cardY];
+                            game.getCurrentPlayer().reserveCard(selectedCard);
+                            Card newCard = game.getGameBoard().getNewCard(cardX);
+                            int[] positon = {cardX, cardY};
+                            game.getGameBoard().setCardOnBoard(newCard, positon);
+                            game.turnToNextPlayer();
+                            broadcastPlayers(game);
                             currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
                         }
 
