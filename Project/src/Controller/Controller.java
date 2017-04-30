@@ -49,6 +49,15 @@ public class Controller{
         addFunctionalListeners(true);
     }
 
+    public Controller(Game game, ObjectOutputStream out, int id, boolean isAi){
+        this.id = id;
+        this.name = "ai";
+        this.game = game;
+        this.out = out;
+        this.currentGemInfo = new GemInfo(0);
+
+    }
+
 
     /**
      * Helper function to help initialize the gui
@@ -395,7 +404,7 @@ public class Controller{
         }
     }
 
-    private void requestServer(String msg, String command){
+    public void requestServer(String msg, String command){
         try {
             out.reset();
             out.writeObject(msg);
@@ -409,7 +418,7 @@ public class Controller{
      * Send text information to server
      * @param msg text information
      */
-    private void sendVoteResult(String msg){
+    public void sendVoteResult(String msg){
         try {
             out.writeObject(msg);
         } catch (IOException e) {
