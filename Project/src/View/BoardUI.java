@@ -33,8 +33,8 @@ public class BoardUI {
     private JPanel decks[];
     private JPanel nobles[];
     private JButton gold;
-    private JButton gems[];
-    private JButton cards[][];
+    private JToggleButton gems[];
+    private JToggleButton cards[][];
     private PlayerPanel players[];
     private JButton collect, reset, buy, reserve;
 
@@ -99,7 +99,8 @@ public class BoardUI {
             gems[i].setOpaque(false);
             gems[i].setContentAreaFilled(false);
             gems[i].setBorderPainted(false);
-            gems[i].setIcon(plotGemButton(getGemByIndex(5-i), availableGems.getByIndex(5-i), gemImages,GEM_WIDTH));
+            gems[i].setIcon(plotGemButton(getGemByIndex(5-i), availableGems.getByIndex(5-i), gemImages,GEM_WIDTH,false));
+            gems[i].setSelectedIcon(plotGemButton(getGemByIndex(5-i), availableGems.getByIndex(5-i), gemImages,GEM_WIDTH,true));
         }
 
         Card[][] currentCards = game.gameBoard.getCards();
@@ -109,7 +110,9 @@ public class BoardUI {
                 cards[i][j].setOpaque(false);
                 cards[i][j].setContentAreaFilled(false);
                 cards[i][j].setBorderPainted(false);
-                cards[i][j].setIcon(plotCardButton(currentCards[i][j],gemImages,cardImages));
+                cards[i][j].setIcon(plotCardButton(currentCards[i][j],gemImages,cardImages,false));
+                cards[i][j].setSelectedIcon(plotCardButton(currentCards[i][j],gemImages,cardImages,true));
+
             }
         }
 
@@ -118,7 +121,9 @@ public class BoardUI {
         gold.setOpaque(false);
         gold.setContentAreaFilled(false);
         gold.setBorderPainted(false);
-        gold.setIcon(plotGoldButton(availableGold,gemImages,GEM_WIDTH));
+        gold.setIcon(plotGoldButton(availableGold,gemImages,GEM_WIDTH,false));
+
+        //gold.setRolloverEnabled(true);
 
         Player[] gamePlayers = game.getPlayers();
         for (int i=0;i<NUM_PLAYER;i++) {
@@ -159,7 +164,7 @@ public class BoardUI {
         exit.addActionListener(a);
     }
 
-    public JButton[] getGems(){
+    public JToggleButton[] getGems(){
         return this.gems;
     }
 
@@ -167,7 +172,7 @@ public class BoardUI {
         return this.gold;
     }
 
-    public JButton[][] getCards(){
+    public JToggleButton[][] getCards(){
         return this.cards;
     }
 
@@ -274,13 +279,13 @@ public class BoardUI {
         }
 
         gold = new JButton("gold");
-        gold.setBounds(ratio/3+75*ratio/100,150*ratio/100, GEM_WIDTH, GEM_HEIGHT);
+        gold.setBounds(ratio/2+75*ratio/100,150*ratio/100, GEM_WIDTH, GEM_HEIGHT);
         gameArea.add(gold);
 
-        gems = new JButton[5];
+        gems = new JToggleButton[5];
         for (int i=0;i<5;i++) {
-            gems[i] = new JButton("tmp");
-            gems[i].setBounds(ratio/3+75*ratio/100, (775-125*i)*ratio/100, GEM_WIDTH, GEM_HEIGHT);
+            gems[i] = new JToggleButton("tmp");
+            gems[i].setBounds(ratio/2+75*ratio/100, (775-125*i)*ratio/100, GEM_WIDTH, GEM_HEIGHT);
             gameArea.add(gems[i]);
         }
 
@@ -292,11 +297,10 @@ public class BoardUI {
             gameArea.add(decks[i]);
         }
 
-
-        cards = new JButton[NUM_CARD_RANK][NUM_CARD_PER_RANK];
+        cards = new JToggleButton[NUM_CARD_RANK][NUM_CARD_PER_RANK];
         for (int i=0;i<NUM_CARD_RANK;i++){
             for (int j=0;j<NUM_CARD_PER_RANK;j++) {
-                cards[i][j] = new JButton();
+                cards[i][j] = new JToggleButton();
                 cards[i][j].setBounds(offset+(250+150*j)*ratio/100, ratio/3+(200+225*i)*ratio/100, CARD_WIDTH,CARD_HEIGHT);
                 gameArea.add(cards[i][j]);
             }

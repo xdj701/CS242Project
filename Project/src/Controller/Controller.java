@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 
 import static Model.utils.GameUtils.*;
+import static View.utils.ViewUtils.*;
 
 /**
  * Created by boyinzhang on 4/17/17.
@@ -21,6 +22,8 @@ public class Controller{
     public BoardUI boardUI;
     private Card selectedCard;
     private GemInfo currentGemInfo;
+
+
     private ObjectOutputStream out;
     private int id;
     private String name;
@@ -92,11 +95,12 @@ public class Controller{
     private void addExitListener() {
         boardUI.addExitListener(new ActionListener(){
             public void actionPerformed(ActionEvent event) {
-                requestServer("EXIT");
+                requestServer("EXIT",null);
                 System.exit(0);
             }
         });
     }
+
 
     /**
      * Add listeners of gems.
@@ -105,6 +109,7 @@ public class Controller{
         this.boardUI.getGems()[4].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //boardUI.getGems()[4].get
                 currentGemInfo.updateInfo(1,0,0,0,0);
             }
         });
@@ -191,6 +196,28 @@ public class Controller{
         addReserveListener(true);
     }
 
+
+    /**
+     * Reset all buttons
+     */
+    private void resetButtons(){
+
+
+        //reset cards
+        for(int i = 0; i < NUM_CARD_RANK; i++){
+            for(int j = 0; j < NUM_CARD_PER_RANK; j ++) {
+                boardUI.getCards()[i][j].setSelected(false);
+            }
+        }
+
+        //reset gems
+        for(int i = 0; i < 5; i++)
+            boardUI.getGems()[i].setSelected(false);
+
+        //clean up gem infos
+        currentGemInfo.reset();
+    }
+
     /**
      * Add listener to the reset button
      */
@@ -204,7 +231,7 @@ public class Controller{
                             "Warning", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                currentGemInfo.reset();
+                resetButtons();
             }
         });
     }
@@ -286,7 +313,7 @@ public class Controller{
                     if (checkEnd()) {
 
                         game.turnToNextPlayer();
-                        requestServer("VICTORY");
+                        requestServer("VICTORY",null);
                         return;
                     }
                     game.turnToNextPlayer();
@@ -394,15 +421,6 @@ public class Controller{
      * Send text information and the game to server
      * @param msg text indicator
      */
-    private void requestServer(String msg){
-        try {
-            out.reset();
-            out.writeObject(msg);
-            out.writeObject(game);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void requestServer(String msg, String command){
         try {

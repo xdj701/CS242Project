@@ -1,13 +1,13 @@
 package Network;
 
-import Controller.Controller;
+import Controller.*;
 import Game.*;
 import Model.Card;
 import Model.utils.GemInfo;
 
-import javax.print.DocFlavor;
 import java.io.*;
 import java.net.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import static Model.utils.GameUtils.*;
@@ -40,20 +40,42 @@ public class Server extends Thread  {
             output[i] = new ObjectOutputStream(server.getOutputStream());
             input[i] = new ObjectInputStream(server.getInputStream());
         }
-
     }
 
     //initialize game after each player sends their game back
-    private void gameInit() throws IOException, ClassNotFoundException {
+    private void gameInit() throws IOException, ClassNotFoundException, SQLException {
 
-        ArrayList<String> names = new ArrayList<String>(NUM_PLAYER);
+        Connect connection = new Connect();
+        ArrayList<String> names = new ArrayList<>(NUM_PLAYER);
         for(int i = 0; i < NUM_PLAYER; i++){
 
-            output[i].writeObject("Please specify your username");
-            String username = (String)input[i].readObject();
-            names.add(username);
+            output[i].writeObject("Please enter your username/password");
+
+            //reading username and password
+            while(true) {
+                String msg = (String) input[i].readObject();
+                //sanity check
+                if (!msg.equals("VERIFY")){
+                    System.out.println("Verification interrupted");
+                    return;
+                }
+
+                String username = (String) input[i].readObject();
+                String password = (String) input[i].readObject();
+
+
+                if (connection.verify(username,password)){
+                    output[i].writeObject(true);
+                    names.add(username);
+                    break;
+                }
+
+                output[i].writeObject(false);
+            }
+
 
         }
+        connection.disconnect();
 
         game = new Game(names);
         System.out.println("new Game");
@@ -238,11 +260,7 @@ public class Server extends Thread  {
                             //splited is the postion of the card, and whether the card is reserved
                             int cardX = Integer.parseInt(splited[0]);
                             int cardY = Integer.parseInt(splited[1]);
-                            boolean isReserved;
-                            if ( Integer.parseInt(splited[2]) == 1)
-                                isReserved = true;
-                            else
-                                isReserved = false;
+                            boolean isReserved = Integer.parseInt(splited[2]) == 1;
                             Card selectedCard;
                             //if it's reserved, then get the card from player section
                             if(isReserved)
@@ -255,8 +273,8 @@ public class Server extends Thread  {
                             //if it is not reserved, we need to put a new card back.
                             if(!isReserved) {
                                 Card newCard = game.getGameBoard().getNewCard(cardX);
-                                int[] positon = {cardX, cardY};
-                                game.getGameBoard().setCardOnBoard(newCard, positon);
+                                int[] position = {cardX, cardY};
+                                game.getGameBoard().setCardOnBoard(newCard, position);
                             }
                             game.getCurrentPlayer().recruitAvailableNobles();
                             game.turnToNextPlayer();
@@ -274,8 +292,8 @@ public class Server extends Thread  {
                             Card selectedCard = game.gameBoard.getCards()[cardX][cardY];
                             game.getCurrentPlayer().reserveCard(selectedCard);
                             Card newCard = game.getGameBoard().getNewCard(cardX);
-                            int[] positon = {cardX, cardY};
-                            game.getGameBoard().setCardOnBoard(newCard, positon);
+                            int[] position = {cardX, cardY};
+                            game.getGameBoard().setCardOnBoard(newCard, position);
                             game.turnToNextPlayer();
                             broadcastPlayers(game);
                             currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
@@ -292,11 +310,9 @@ public class Server extends Thread  {
                 }
 
 
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
                 //break;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
             }
         //}
         System.out.println("Server closed");
@@ -305,6 +321,8 @@ public class Server extends Thread  {
 
 
     public static void main(String [] args) {
+
+
         int port = (args.length == 0) ? 8080 : Integer.parseInt(args[1]);
 
         Thread t = null;
@@ -313,6 +331,7 @@ public class Server extends Thread  {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        assert t != null;
         t.start();
 
     }

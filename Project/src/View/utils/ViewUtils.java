@@ -32,7 +32,7 @@ public class ViewUtils {
     public final static int GAME_WIDTH=13*ratio;
     public final static int GAME_HEIGHT=10*ratio;
     public final static int PLAYER_WIDTH=3*ratio+3*CARD_WIDTH;
-    public final static int PLAYER_HEIGHT=10*ratio/NUM_PLAYER;
+    public final static int PLAYER_HEIGHT=GAME_HEIGHT/NUM_PLAYER;
     public final static int WINDOW_WIDTH=GAME_WIDTH+PLAYER_WIDTH;
     public final static int WINDOW_HEIGHT=GAME_HEIGHT;
 
@@ -101,38 +101,60 @@ public class ViewUtils {
 
     }
 
-    public static ImageIcon plotGemButton(Gem gem, int left, Hashtable<String, Image> gemImages,int width){
+    //
+    public static void highlightButton(Graphics2D g2d, int w, int h){
+        Stroke oldStroke = g2d.getStroke();
+        g2d.setStroke(new BasicStroke(5));
+        g2d.setColor(Color.orange);
+        g2d.drawRect(0,0,w,h);
+        g2d.setStroke(oldStroke);
+    }
+
+
+    //
+    public static ImageIcon plotGemButton(Gem gem, int left, Hashtable<String, Image> gemImages,int width, boolean selected){
 
         BufferedImage buffered = new BufferedImage(width, width, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = buffered.createGraphics();
         int r = width/2;
+
+        if(selected){
+            g2d.setColor(Color.orange);
+            g2d.fillOval(0,0,2*r,2*r);
+        }
 
         //plot gem and resize the image
         Image gemImg = gemImages.get(gem.getGemName()).getScaledInstance(width,width,Image.SCALE_SMOOTH);
         g2d.drawImage(gemImg, 0, 0 , null);
         plotStringWithOutline(g2d,Integer.toString(left),r/2,r*3/2,r*3/4);
+
         return new ImageIcon(buffered);
     }
 
 
-
-    public static ImageIcon plotGoldButton(int left, Hashtable<String, Image> gemImages,int width){
+    //
+    public static ImageIcon plotGoldButton(int left, Hashtable<String, Image> gemImages,int width, boolean selected){
 
         BufferedImage buffered = new BufferedImage(width, width, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = buffered.createGraphics();
         int r = width/2;
 
+        if(selected){
+            g2d.setColor(Color.orange);
+            g2d.fillOval(0,0,2*r,2*r);
+        }
+
         //plot gold and resize the image
         Image gemImg = gemImages.get("Gold").getScaledInstance(width,width,Image.SCALE_SMOOTH);;
         g2d.drawImage(gemImg, 0,0, null);
+
         plotStringWithOutline(g2d,Integer.toString(left),r/2,r*3/2,r*3/4);
 
         return new ImageIcon(buffered);
-
     }
 
-
-    public static ImageIcon plotCardButton(Card card, Hashtable<String, Image> gemImages, Hashtable<String, Image> cardImages) {
+    //
+    public static ImageIcon plotCardButton(Card card, Hashtable<String, Image> gemImages, Hashtable<String, Image> cardImages, boolean selected) {
 
         //extract the card information
         Gem gem = card.getTargetGem();
@@ -173,6 +195,11 @@ public class ViewUtils {
             plotCircleWithOutline(g2d,COLOR_MAP.get(i-1),x,y,2*r);
             plotStringWithOutline(g2d,Integer.toString(cost),x+r/2,y+r*3/2,r*3/2);
         }
+
+        if(selected){
+            highlightButton(g2d,CARD_WIDTH,CARD_HEIGHT);
+        }
+
 
         return new ImageIcon(buffered);
     }

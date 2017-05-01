@@ -123,13 +123,13 @@ public class PlayerPanel extends JPanel {
         for(int i = 1; i <= 5; i++){
             int gem = gemInfo.getByIndex(i);
             JLabel gemLabel = new JLabel();
-            gemLabel.setIcon(plotGemButton(getGemByIndex(i),gem,gemImages,width));
+            gemLabel.setIcon(plotGemButton(getGemByIndex(i),gem,gemImages,width,false));
             gemLabel.setPreferredSize(new Dimension(width,height));
             gems.add(gemLabel);
         }
         //JLabel goldLabel = new JLabel(Integer.toString(gold),JLabel.CENTER);
         JLabel goldLabel = new JLabel();
-        goldLabel.setIcon(plotGoldButton(gold,gemImages,width));
+        goldLabel.setIcon(plotGoldButton(gold,gemImages,width,false));
         goldLabel.setPreferredSize(new Dimension(width,height));
         gems.add(goldLabel);
         gems.validate();
@@ -191,7 +191,7 @@ public class PlayerPanel extends JPanel {
             reservedCards[i].setBorderPainted(false);
             //if there is a reserved card, display the image
             if(i < reserved.size())
-                reservedCards[i].setIcon(plotCardButton(reserved.get(i),gemImages,cardImages));
+                reservedCards[i].setIcon(plotCardButton(reserved.get(i),gemImages,cardImages,false));
             else
                 reservedCards[i].setIcon(null);
             reservedCards[i].validate();

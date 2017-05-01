@@ -1,16 +1,14 @@
 package Network;
 
-import Controller.Controller;
-import Game.Game;
-import Model.*;
-import View.*;
+import Controller.*;
+import Game.*;
 
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Array;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.net.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by boyinzhang on 4/22/17.
@@ -44,16 +42,23 @@ public class Client {
         String msg = (String)flowInput.readObject();
         System.out.println(msg);
 
+        Login loginDlg = new Login(null,flowInput,flowOutput);
+        loginDlg.setVisible(true);
+
+        /*
         //get username from keyboard
-        keyboardInput =new Scanner(System.in);
+        keyboardInput = new Scanner(System.in);
         String name = keyboardInput.nextLine();
 
         //send username back
         flowOutput.writeObject(name);
 
+*/
+
         //fetch id and game
         clientID = (Integer) flowInput.readObject();
         Game game = (Game) flowInput.readObject();
+        String name = game.players[clientID].getName();
 
         if(name.startsWith("ai")){
             ai = true;
