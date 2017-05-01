@@ -8,6 +8,7 @@ public class Connect {
 
     private Connection connection;
 
+    //jdbc library loaded
     public Connect() throws ClassNotFoundException, SQLException {
 
         Class.forName("com.mysql.jdbc.Driver");
@@ -15,14 +16,14 @@ public class Connect {
 
     }
 
+    //disconnect from database
     public void disconnect() throws SQLException {
         connection.close();
     }
 
+    //execute query to validate if the username matches with the password
     public boolean verify(String usr, String pin) throws SQLException {
 
-        return true;
-/*
         Statement stmt= connection.createStatement();
         ResultSet rs=stmt.executeQuery("select password from users where username = '" + usr +"'");
         if(rs.first()){
@@ -34,7 +35,6 @@ public class Connect {
 
         return false;
 
-*/
     }
 
 

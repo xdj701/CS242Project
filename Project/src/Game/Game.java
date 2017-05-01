@@ -29,7 +29,7 @@ public class Game implements Serializable{
         this.players = new Player[NUM_PLAYER];
 
         for(int i = 0; i < NUM_PLAYER; i++){
-            players[i] = new Player(i+1 , this.gameBoard, null);
+            players[i] = new Player(i+1 , this.gameBoard, Integer.toString(i+1));
         }
         currentPlayer = players[0];
     }

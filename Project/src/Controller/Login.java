@@ -39,7 +39,7 @@ public class Login extends JDialog {
         cs.gridwidth = 1;
         panel.add(lbUsername, cs);
 
-        tfUsername = new JTextField(20);
+        tfUsername = new JTextField(10);
         cs.gridx = 1;
         cs.gridy = 0;
         cs.gridwidth = 2;
@@ -51,7 +51,7 @@ public class Login extends JDialog {
         cs.gridwidth = 1;
         panel.add(lbPassword, cs);
 
-        pfPassword = new JPasswordField(20);
+        pfPassword = new JPasswordField(10);
         cs.gridx = 1;
         cs.gridy = 1;
         cs.gridwidth = 2;

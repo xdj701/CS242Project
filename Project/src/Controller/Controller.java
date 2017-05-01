@@ -33,10 +33,10 @@ public class Controller{
         this.boardUI = new BoardUI(game,"anonymous");
         this.currentGemInfo = new GemInfo(0);
         this.id = 0;
-        addMenuItemListener();
+        addMenuItemListener(false);
         addGemsListener();
         addCardListeners();
-        addFunctionalListeners();
+        addFunctionalListeners(false);
     }
 
     public Controller(Game game, ObjectOutputStream out, int id, String name){
@@ -46,7 +46,7 @@ public class Controller{
         this.out = out;
         this.boardUI = new BoardUI(game,name);
         this.currentGemInfo = new GemInfo(0);
-        addMenuItemListener();
+        addMenuItemListener(true);
         addGemsListener();
         addCardListeners();
         addFunctionalListeners(true);
@@ -65,19 +65,22 @@ public class Controller{
     /**
      * Helper function to help initialize the gui
      */
-    private void addMenuItemListener(){
-        addNewGameListener();
-        addExitListener();
+    private void addMenuItemListener(boolean serverMode){
+        addNewGameListener(serverMode);
+        addExitListener(serverMode);
     }
 
     /**
      * for JMenubar New
      */
-    private void addNewGameListener() {
+    private void addNewGameListener(boolean serverMode) {
         boardUI.addNewGameListener(new ActionListener(){
             public void actionPerformed(ActionEvent event) {
-                sendVoteResult("RESTART");
-                //newGame();
+
+                if(serverMode)
+                    sendVoteResult("RESTART");
+                else
+                    newGame();
             }
         });
     }
@@ -92,10 +95,11 @@ public class Controller{
     /**
      * for JMenubar Exit
      */
-    private void addExitListener() {
+    private void addExitListener(boolean serverMode) {
         boardUI.addExitListener(new ActionListener(){
             public void actionPerformed(ActionEvent event) {
-                requestServer("EXIT",null);
+                if(serverMode)
+                    requestServer("EXIT","EXIT");
                 System.exit(0);
             }
         });
@@ -109,8 +113,10 @@ public class Controller{
         this.boardUI.getGems()[4].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //boardUI.getGems()[4].get
+                //double click will not cancel the effect
                 currentGemInfo.updateInfo(1,0,0,0,0);
+                if(currentGemInfo.diamond >= 2)
+                    boardUI.getGems()[4].setSelected(true);
             }
         });
 
@@ -118,6 +124,8 @@ public class Controller{
             @Override
             public void actionPerformed(ActionEvent e) {
                 currentGemInfo.updateInfo(0,1,0,0,0);
+                if(currentGemInfo.emerald >= 2)
+                    boardUI.getGems()[3].setSelected(true);
             }
         });
 
@@ -125,6 +133,8 @@ public class Controller{
             @Override
             public void actionPerformed(ActionEvent e) {
                 currentGemInfo.updateInfo(0,0,1,0,0);
+                if(currentGemInfo.onyx >= 2)
+                    boardUI.getGems()[2].setSelected(true);
             }
         });
 
@@ -132,6 +142,8 @@ public class Controller{
             @Override
             public void actionPerformed(ActionEvent e) {
                 currentGemInfo.updateInfo(0,0,0,1,0);
+                if(currentGemInfo.ruby >= 2)
+                    boardUI.getGems()[1].setSelected(true);
             }
         });
 
@@ -139,6 +151,8 @@ public class Controller{
             @Override
             public void actionPerformed(ActionEvent e) {
                 currentGemInfo.updateInfo(0,0,0,0,1);
+                if(currentGemInfo.sapphire >= 2)
+                    boardUI.getGems()[0].setSelected(true);
             }
         });
     }
@@ -176,24 +190,14 @@ public class Controller{
     }
 
     /**
-     * Add listeners to the four major operations
-     */
-    private void addFunctionalListeners(){
-        addResetLisenter(false);
-        addCollectListener(false);
-        addBuyListener(false);
-        addReserveListener(false);
-    }
-
-    /**
      * Indicator whether it is used for server mode.
      * @param serverMode true if it is the server mode
      */
     private void addFunctionalListeners(boolean serverMode){
-        addResetLisenter(true);
-        addCollectListener(true);
-        addBuyListener(true);
-        addReserveListener(true);
+        addResetListener(serverMode);
+        addCollectListener(serverMode);
+        addBuyListener(serverMode);
+        addReserveListener(serverMode);
     }
 
 
@@ -202,13 +206,13 @@ public class Controller{
      */
     private void resetButtons(){
 
-
         //reset cards
         for(int i = 0; i < NUM_CARD_RANK; i++){
             for(int j = 0; j < NUM_CARD_PER_RANK; j ++) {
                 boardUI.getCards()[i][j].setSelected(false);
             }
         }
+        selectedCard = null;
 
         //reset gems
         for(int i = 0; i < 5; i++)
@@ -222,14 +226,16 @@ public class Controller{
      * Add listener to the reset button
      */
 
-    private void addResetLisenter(boolean serverMode){
+    private void addResetListener(boolean serverMode){
         this.boardUI.getReset().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(game.getCurrentPlayer().getPlayerId() != id+1 && serverMode) {
-                    JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                    return;
+                if(serverMode) {
+                    if (game.getCurrentPlayer().getPlayerId() != id + 1) {
+                        JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                 }
                 resetButtons();
             }
@@ -244,30 +250,34 @@ public class Controller{
         this.boardUI.getCollect().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(game.getCurrentPlayer().getPlayerId() != id+1 && serverMode) {
-                    JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                    return;
+                if(serverMode) {
+                    if (game.getCurrentPlayer().getPlayerId() != id + 1) {
+                        JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                 }
 
-                boolean status = game.getCurrentPlayer().collectGems(currentGemInfo);
-                if(!status){
-                    JOptionPane.showMessageDialog(null, "Invalid Collection! Please make another try!",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                    currentGemInfo.reset();
-                }
-                else{
-                    String command = String.valueOf(currentGemInfo.diamond) + ' ' + String.valueOf(currentGemInfo.emerald) + ' '
-                            + String.valueOf(currentGemInfo.onyx) + ' ' + String.valueOf(currentGemInfo.ruby) + ' '
-                            + String.valueOf(currentGemInfo.sapphire);
-                    currentGemInfo.reset();
-                    //if (checkEnd()) return;
-                    //game.turnToNextPlayer();
+                    boolean status = game.getCurrentPlayer().collectGems(currentGemInfo);
+                    if (!status) {
+                        JOptionPane.showMessageDialog(null, "Invalid Collection! Please make another try!",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        resetButtons();
+                    } else {
+                        String command = String.valueOf(currentGemInfo.diamond) + ' ' + String.valueOf(currentGemInfo.emerald) + ' '
+                                + String.valueOf(currentGemInfo.onyx) + ' ' + String.valueOf(currentGemInfo.ruby) + ' '
+                                + String.valueOf(currentGemInfo.sapphire);
+                        resetButtons();
+                        if(serverMode)
+                            requestServer("COLLECT", command);
+                        else{
+                            if (checkEnd(false)) return;
+                            game.turnToNextPlayer();
+                            boardUI.updateByGame(game);
+                        }
+                    }
 
-                    requestServer("COLLECT", command);
 
-                    //boardUI.updateByGame(game);
-                }
 
             }
         });
@@ -280,11 +290,15 @@ public class Controller{
         this.boardUI.getBuy().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(game.getCurrentPlayer().getPlayerId() != id+1 && serverMode) {
-                    JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                    return;
+
+                if(serverMode) {
+                    if (game.getCurrentPlayer().getPlayerId() != id + 1) {
+                        JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                 }
+
                 if(selectedCard == null){
                     JOptionPane.showMessageDialog(null, "Must select one card!",
                             "Warning", JOptionPane.WARNING_MESSAGE);
@@ -296,30 +310,39 @@ public class Controller{
                             "Warning", JOptionPane.WARNING_MESSAGE);
                     selectedCard = null;
                 }
-                else{
-                    String command;
-                    if(selectedCard.isReserved()){
-                        command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
-                                + " 1";
-                    }
-                    else{
-                        command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
-                                + " 0";
-                    }
-                    Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
-                    game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
-                    selectedCard = null;
-                    game.getCurrentPlayer().recruitAvailableNobles();
-                    if (checkEnd()) {
+                else {
+                        String command;
+                        if (selectedCard.isReserved()) {
+                            command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
+                                    + " 1";
+                        } else {
+                            command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1])
+                                    + " 0";
+                        }
 
-                        game.turnToNextPlayer();
-                        requestServer("VICTORY",null);
-                        return;
-                    }
-                    game.turnToNextPlayer();
-                    requestServer("PURCHASE", command);
-
-                    //boardUI.updateByGame(game);
+                        Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
+                        game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
+                        resetButtons();
+                        game.getCurrentPlayer().recruitAvailableNobles();
+                        if(serverMode) {
+                            if (checkEnd(true)) {
+                                game.turnToNextPlayer();
+                                try {
+                                    out.writeObject("VICTORY");
+                                    out.writeObject(game);
+                                } catch (IOException e1) {
+                                    e1.printStackTrace();
+                                }
+                                return;
+                            }
+                            game.turnToNextPlayer();
+                            requestServer("PURCHASE", command);
+                        }
+                        else{
+                            if (checkEnd(false)) return;
+                            game.turnToNextPlayer();
+                            boardUI.updateByGame(game);
+                        }
                 }
 
             }
@@ -327,37 +350,37 @@ public class Controller{
     }
 
 
-    private boolean checkEnd() {
+    private boolean checkEnd(boolean serverMode) {
 
-        /*
-        if(game.getCurrentPlayer().getPlayerId() == NUM_PLAYER){
-            int numberOfWining = game.checkEndofGame();
-            if(numberOfWining == 1){
-                for(Player player : game.getPlayers()){
-                    if(player.hasWon()){
-                        int replyNewGame = JOptionPane.showConfirmDialog(null,
-                                "Player " +player.getPlayerId()+" win! Do you want to start a new game","Yes?",JOptionPane.YES_NO_OPTION);
-                        if(replyNewGame==JOptionPane.YES_OPTION) {
-                            newGame();
-                            return true;
+        if(serverMode) {
+            if (game.currentPlayer.hasWon())
+                return true;
+        }
+        //local mode
+        else {
+            if (game.getCurrentPlayer().getPlayerId() == NUM_PLAYER) {
+                int numberOfWining = game.checkEndofGame();
+                if (numberOfWining == 1) {
+                    for (Player player : game.getPlayers()) {
+                        if (player.hasWon()) {
+                            int replyNewGame = JOptionPane.showConfirmDialog(null,
+                                    "Player " + player.getPlayerId() + " win! Do you want to start a new game", "Yes?", JOptionPane.YES_NO_OPTION);
+                            if (replyNewGame == JOptionPane.YES_OPTION) {
+                                newGame();
+                                return true;
+                            }
                         }
+                    }
+                } else if (numberOfWining > 1) {
+                    int replyNewGame = JOptionPane.showConfirmDialog(null,
+                            "Tie! Do you want to start a new game", "Yes?", JOptionPane.YES_NO_OPTION);
+                    if (replyNewGame == JOptionPane.YES_OPTION) {
+                        newGame();
+                        return true;
                     }
                 }
             }
-            else if(numberOfWining >1){
-                int replyNewGame = JOptionPane.showConfirmDialog(null,
-                        "Tie! Do you want to start a new game","Yes?",JOptionPane.YES_NO_OPTION);
-                if(replyNewGame==JOptionPane.YES_OPTION) {
-                    newGame();
-                    return true;
-                }
-            }
         }
-        */
-        if(game.currentPlayer.hasWon())
-            return true;
-
-
         return false;
     }
 
@@ -368,12 +391,15 @@ public class Controller{
         this.boardUI.getReserve().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Reserve");
-                if(game.getCurrentPlayer().getPlayerId() != id+1 && serverMode) {
-                    JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                    return;
+                //System.out.println("Reserve");
+                if(serverMode) {
+                    if (game.getCurrentPlayer().getPlayerId() != id + 1) {
+                        JOptionPane.showMessageDialog(null, "Wait for your opponent's move",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                 }
+
                 if(selectedCard == null){
                     JOptionPane.showMessageDialog(null, "Must select one card!",
                             "Warning", JOptionPane.WARNING_MESSAGE);
@@ -387,16 +413,21 @@ public class Controller{
                 }
                 else{
                     String command = String.valueOf(selectedCard.getPosition()[0]) + ' ' + String.valueOf(selectedCard.getPosition()[1]);
+
                     Card newCard = game.getGameBoard().getNewCard(selectedCard.getPosition()[0]);
                     game.getGameBoard().setCardOnBoard(newCard, selectedCard.getPosition());
-                    selectedCard = null;
-                    //if (checkEnd()) return;
-                    game.turnToNextPlayer();
-                    //boardUI.window.setEnabled(false);
-                    requestServer("RESERVE", command);
-                    System.out.println("Reserve request made");
 
-                    //boardUI.updateByGame(game);
+                    game.turnToNextPlayer();
+                    resetButtons();
+                    //boardUI.window.setEnabled(false);
+                    if(serverMode) {
+                        requestServer("RESERVE", command);
+                        System.out.println("Reserve request made");
+                    }
+                    else {
+                        boardUI.updateByGame(game);
+                        if (checkEnd(false)) return;
+                    }
                 }
             }
         });

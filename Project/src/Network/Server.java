@@ -130,6 +130,7 @@ public class Server extends Thread  {
 
     //when someone declares victory, the rest players still have one round to play
     private void lastRound(int currentPlayer) throws IOException, ClassNotFoundException {
+
         Game updatedGame = (Game) input[currentPlayer].readObject();
         broadcastPlayers(updatedGame);
 
@@ -139,11 +140,25 @@ public class Server extends Thread  {
 
         for (int nextPlayer = currentPlayer + 1; nextPlayer < NUM_PLAYER; nextPlayer++) {
             String request = (String) input[nextPlayer].readObject();
-            updatedGame = (Game) input[nextPlayer].readObject();
+
+            // here is receiving the information for collection
+            if (request.startsWith("COLLECT"))
+                recvCollect(currentPlayer);
+
+            // here is receiving the information for buying cards
+            if (request.startsWith("PURCHASE"))
+                recvBuy(currentPlayer);
+
+            //here is receiving the information for reserving card
+            if (request.startsWith("RESERVE"))
+                recvReserve(currentPlayer);
+
             if (request.startsWith("VICTORY")) {
                 winners.add(nextPlayer);
             }
-            broadcastPlayers(updatedGame);
+
+            //updatedGame = (Game) input[nextPlayer].readObject();
+            //broadcastPlayers(updatedGame);
         }
         announceResult(winners);
 
@@ -168,6 +183,60 @@ public class Server extends Thread  {
             output[i].writeObject(updatedGame);
         }
 
+    }
+
+    public void recvCollect(int currentPlayer) throws IOException, ClassNotFoundException {
+        String command = (String) input[currentPlayer].readObject();
+        String[] splited = command.split(" ");
+        //splited is the number of each gems collected
+        GemInfo collectedGem = new GemInfo(Integer.parseInt(splited[0]),Integer.parseInt(splited[1]), Integer.parseInt(splited[2]), Integer.parseInt(splited[3]), Integer.parseInt(splited[4]));
+        game.getCurrentPlayer().collectGems(collectedGem);
+        game.turnToNextPlayer();
+        //send the updated game to all the clients
+        broadcastPlayers(game);
+    }
+
+    public void recvBuy(int currentPlayer) throws IOException, ClassNotFoundException {
+        String command = (String) input[currentPlayer].readObject();
+        String[] splited = command.split(" ");
+        //splited is the postion of the card, and whether the card is reserved
+        int cardX = Integer.parseInt(splited[0]);
+        int cardY = Integer.parseInt(splited[1]);
+        boolean isReserved = Integer.parseInt(splited[2]) == 1;
+        Card selectedCard;
+        //if it's reserved, then get the card from player section
+        if(isReserved)
+            selectedCard = game.getPlayers()[cardX].getReserves().get(cardY);
+            //if not, get the card from the game board
+        else
+            selectedCard = game.gameBoard.getCards()[cardX][cardY];
+
+        game.getCurrentPlayer().buyCard(selectedCard,isReserved);
+        //if it is not reserved, we need to put a new card back.
+        if(!isReserved) {
+            Card newCard = game.getGameBoard().getNewCard(cardX);
+            int[] position = {cardX, cardY};
+            game.getGameBoard().setCardOnBoard(newCard, position);
+        }
+        game.getCurrentPlayer().recruitAvailableNobles();
+        game.turnToNextPlayer();
+        broadcastPlayers(game);
+
+    }
+
+    public void recvReserve(int currentPlayer) throws IOException, ClassNotFoundException {
+        String command = (String) input[currentPlayer].readObject();
+        String[] splited = command.split(" ");
+        // splited is the position of the card
+        int cardX = Integer.parseInt(splited[0]);
+        int cardY = Integer.parseInt(splited[1]);
+        Card selectedCard = game.gameBoard.getCards()[cardX][cardY];
+        game.getCurrentPlayer().reserveCard(selectedCard);
+        Card newCard = game.getGameBoard().getNewCard(cardX);
+        int[] position = {cardX, cardY};
+        game.getGameBoard().setCardOnBoard(newCard, position);
+        game.turnToNextPlayer();
+        broadcastPlayers(game);
     }
 
     @Override
@@ -240,68 +309,20 @@ public class Server extends Thread  {
 
                             continue;
                         }
+
                         // here is receiving the information for collection
-                        if (request.startsWith("COLLECT")){
-                            String command = (String) input[currentPlayer].readObject();
-                            String[] splited = command.split(" ");
-                            //splited is the number of each gems collected
-                            GemInfo collectedGem = new GemInfo(Integer.parseInt(splited[0]),Integer.parseInt(splited[1]), Integer.parseInt(splited[2]), Integer.parseInt(splited[3]), Integer.parseInt(splited[4]));
-                            game.getCurrentPlayer().collectGems(collectedGem);
-                            game.turnToNextPlayer();
-                            //send the updated game to all the clients
-                            broadcastPlayers(game);
-                            currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
-                        }
+                        if (request.startsWith("COLLECT"))
+                            recvCollect(currentPlayer);
 
                         // here is receiving the information for buying cards
-                        if (request.startsWith("PURCHASE")) {
-                            String command = (String) input[currentPlayer].readObject();
-                            String[] splited = command.split(" ");
-                            //splited is the postion of the card, and whether the card is reserved
-                            int cardX = Integer.parseInt(splited[0]);
-                            int cardY = Integer.parseInt(splited[1]);
-                            boolean isReserved = Integer.parseInt(splited[2]) == 1;
-                            Card selectedCard;
-                            //if it's reserved, then get the card from player section
-                            if(isReserved)
-                                selectedCard = game.getPlayers()[cardX].getReserves().get(cardY);
-                            //if not, get the card from the game board
-                            else
-                                selectedCard = game.gameBoard.getCards()[cardX][cardY];
-
-                            game.getCurrentPlayer().buyCard(selectedCard,isReserved);
-                            //if it is not reserved, we need to put a new card back.
-                            if(!isReserved) {
-                                Card newCard = game.getGameBoard().getNewCard(cardX);
-                                int[] position = {cardX, cardY};
-                                game.getGameBoard().setCardOnBoard(newCard, position);
-                            }
-                            game.getCurrentPlayer().recruitAvailableNobles();
-                            game.turnToNextPlayer();
-                            broadcastPlayers(game);
-                            currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
-                        }
+                        if (request.startsWith("PURCHASE"))
+                            recvBuy(currentPlayer);
 
                         //here is receiving the information for reserving card
-                        if (request.startsWith("RESERVE")) {
-                            String command = (String) input[currentPlayer].readObject();
-                            String[] splited = command.split(" ");
-                            // splited is the position of the card
-                            int cardX = Integer.parseInt(splited[0]);
-                            int cardY = Integer.parseInt(splited[1]);
-                            Card selectedCard = game.gameBoard.getCards()[cardX][cardY];
-                            game.getCurrentPlayer().reserveCard(selectedCard);
-                            Card newCard = game.getGameBoard().getNewCard(cardX);
-                            int[] position = {cardX, cardY};
-                            game.getGameBoard().setCardOnBoard(newCard, position);
-                            game.turnToNextPlayer();
-                            broadcastPlayers(game);
-                            currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
-                        }
+                        if (request.startsWith("RESERVE"))
+                            recvReserve(currentPlayer);
 
-                        //next one;
-
-                        //output[currentPlayer].writeObject("MOVE");
+                        currentPlayer = (currentPlayer + 1) % NUM_PLAYER;
 
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();

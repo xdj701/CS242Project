@@ -101,7 +101,7 @@ public class ViewUtils {
 
     }
 
-    //
+    //paint the border of cards
     public static void highlightButton(Graphics2D g2d, int w, int h){
         Stroke oldStroke = g2d.getStroke();
         g2d.setStroke(new BasicStroke(5));
@@ -111,7 +111,7 @@ public class ViewUtils {
     }
 
 
-    //
+    //fill the background of gem buttons if it is selected
     public static ImageIcon plotGemButton(Gem gem, int left, Hashtable<String, Image> gemImages,int width, boolean selected){
 
         BufferedImage buffered = new BufferedImage(width, width, BufferedImage.TYPE_INT_ARGB);
@@ -132,7 +132,7 @@ public class ViewUtils {
     }
 
 
-    //
+    //plot gold button with subscript number indicating the remaining gold
     public static ImageIcon plotGoldButton(int left, Hashtable<String, Image> gemImages,int width, boolean selected){
 
         BufferedImage buffered = new BufferedImage(width, width, BufferedImage.TYPE_INT_ARGB);

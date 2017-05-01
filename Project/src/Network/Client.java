@@ -25,7 +25,6 @@ public class Client {
     private ObjectOutputStream flowOutput = null;
     private Controller controller;
 
-
     private boolean ai;
     private int clientID;
     private String username;
@@ -151,9 +150,39 @@ public class Client {
     //main
     public static void main(String[] args) throws Exception {
 
-        String serverAddress = (args.length == 0) ? "localhost" : args[1];
-        Client client = new Client(serverAddress);
-        client.play();
+
+        Object[] options = {"Yes, help me find the other players! ", "No, I want to start a local game!"};
+        int local = JOptionPane.showOptionDialog(null,
+                "Do you want to connect to the internet?",
+                "Connection",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,     //do not use a custom Icon
+                options,  //the titles of buttons
+                options[0]); //default button title
+
+        if(local == 1){
+
+            int localAI = JOptionPane.showOptionDialog(null,
+                    "Do you want to play with AI?",
+                    "AI",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,     //do not use a custom Icon
+                    options,  //the titles of buttons
+                    options[0]); //default button title
+            if(localAI == 1){
+
+            }
+            else {
+                Controller c = new Controller();
+            }
+        }
+        else {
+            String serverAddress = (args.length == 0) ? "localhost" : args[1];
+            Client client = new Client(serverAddress);
+            client.play();
+        }
 
     }
 
